@@ -1,0 +1,25 @@
+name: pawly
+description: "Pawly - simple pet care tracker with vaccine, medicine and vet reminders."
+publish_to: 'none'
+
+# versionName+versionCode. Increase the number after + for every Play Store upload.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_local_notifications: ^22.3.2
+  timezone: ^0.11.0
+  path_provider: ^2.1.5
+  image_picker: ^1.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
