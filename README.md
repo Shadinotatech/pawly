@@ -27,13 +27,9 @@ Signing key (`upload-keystore.jks`) ei zip-e **nei**; seta alada zip-e dewa hoye
 4. `pawly.zip` unzip korun. Unzip kora `pawly` folder-er **bhitorer sob kichu** (`.github`, `android`, `docs`, `lib`, `store`, `test`, `tools`, `pubspec.yaml`, ityadi) browser-e tene (drag) chere din.
 5. Niche **Commit changes** chapun.
 
-### Dhap 2: Signing key-er 4 ta secret din (5 minute)
+### Dhap 2: Signing key-er secret din (2 minute)
 1. Repo-te **Settings** > **Secrets and variables** > **Actions** > **New repository secret**.
-2. `pawly-signing.zip`-er `SIGNING-KEY-INFO.txt` khule 4 ta secret ekta ekta kore banan:
-   - `KEYSTORE_BASE64` = `KEYSTORE_BASE64.txt` file-er puro lekha (copy-paste)
-   - `KEYSTORE_PASSWORD` = info file-e lekha password
-   - `KEY_ALIAS` = `upload`
-   - `KEY_PASSWORD` = info file-e lekha password (eki password)
+2. Name: `SIGNING_BUNDLE`. Secret: `pawly-signing.zip`-er `SIGNING_BUNDLE.txt` file-er puro lekha copy-paste korun. **Add secret** chapun.
 
 ### Dhap 3: App build korun (15 minute, nijei hoy)
 1. Repo-te **Actions** tab > (prothom bar hole sobuj button chepe enable korun) > bame **Build Pawly** > dane **Run workflow** > **Run workflow**.

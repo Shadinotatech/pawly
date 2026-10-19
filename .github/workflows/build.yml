@@ -43,23 +43,17 @@ jobs:
 
       - name: Add signing key
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          SIGNING_BUNDLE: ${{ secrets.SIGNING_BUNDLE }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::warning::No signing secrets found. Building with a debug key (OK for testing, NOT for Play Store)."
+          if [ -z "$SIGNING_BUNDLE" ]; then
+            echo "::warning::No SIGNING_BUNDLE secret found. Building with a debug key (OK for testing, NOT for Play Store)."
             exit 0
           fi
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
-          cat > android/key.properties <<EOF
-          storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
-          storeFile=upload-keystore.jks
-          EOF
-          sed -i 's/^ *//' android/key.properties
+          mkdir -p signing
+          echo "$SIGNING_BUNDLE" | base64 --decode | tar -xzf - -C signing
+          mv signing/upload-keystore.jks android/app/upload-keystore.jks
+          mv signing/key.properties android/key.properties
+          rm -rf signing
           echo "Signing key added."
 
       - name: Build APK (install on your phone to test)
