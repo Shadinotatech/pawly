@@ -35,11 +35,11 @@ App category: Lifestyle  (Health & Fitness is for human health, so Lifestyle fit
 Tags: Pets
 
 ## Contact details
-Email: your email (required, shown on the store)
-Website: your GitHub Pages address (optional)
+Email: shadinotatech@gmail.com
+Website: https://shadinotatech.github.io/pawly/
 
 ## Privacy policy URL
-https://YOUR-GITHUB-USERNAME.github.io/pawly/privacy-policy.html
+https://shadinotatech.github.io/pawly/privacy-policy.html
 
 ## Release notes (version 1.0.0)
 First release of Pawly: medicine, vaccine and care reminders, weight chart and vet notes for all your pets.
