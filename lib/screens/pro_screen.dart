@@ -20,7 +20,7 @@ class _Feature {
 }
 
 const _features = [
-  _Feature(Icons.pets, 'Pets', 'Up to ${AppStore.freePetLimit}', 'Unlimited'),
+  _Feature(Icons.pets, 'Number of pets', '${AppStore.freePetLimit}', 'Unlimited'),
   _Feature(Icons.notifications_active_outlined, 'Medicine, vaccine & care reminders', 'Yes', 'Yes'),
   _Feature(Icons.monitor_weight_outlined, 'Weight chart & vet notes', 'Yes', 'Yes'),
   _Feature(Icons.dark_mode_outlined, 'Light & dark theme', 'Yes', 'Yes'),
@@ -88,8 +88,8 @@ class _ProScreenState extends State<ProScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
                   child: Row(children: [
                     Expanded(child: Text('What you get', style: theme.textTheme.titleSmall)),
-                    SizedBox(width: 62, child: Center(child: Text('Free', style: theme.textTheme.titleSmall))),
-                    const SizedBox(width: 62, child: Center(child: ProBadge())),
+                    SizedBox(width: 66, child: Center(child: Text('Free', style: theme.textTheme.titleSmall))),
+                    const SizedBox(width: 66, child: Center(child: ProBadge())),
                   ]),
                 ),
                 const Divider(),
@@ -100,8 +100,8 @@ class _ProScreenState extends State<ProScreen> {
                       Icon(f.icon, size: 20, color: c.muted),
                       const SizedBox(width: 12),
                       Expanded(child: Text(f.name, style: theme.textTheme.bodyMedium)),
-                      SizedBox(width: 62, child: Center(child: _Cell(f.free, pro: false))),
-                      SizedBox(width: 62, child: Center(child: _Cell(f.pro, pro: true))),
+                      SizedBox(width: 66, child: Center(child: _Cell(f.free, pro: false))),
+                      SizedBox(width: 66, child: Center(child: _Cell(f.pro, pro: true))),
                     ]),
                   ),
               ]),
@@ -187,7 +187,7 @@ class _Cell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = PawlyColors.of(context);
-    if (value.isEmpty) return Icon(Icons.remove, size: 18, color: c.cardBorder);
+    if (value.isEmpty) return Icon(Icons.remove, size: 18, color: c.muted.withValues(alpha: 0.5));
     if (value == 'Yes') {
       return Icon(Icons.check_circle_rounded,
           size: 20, color: pro ? Brand.marigold : c.done);

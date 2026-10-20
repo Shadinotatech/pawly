@@ -518,13 +518,13 @@ class TodayRingPainter extends CustomPainter {
     final base = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round;
+      ..strokeCap = StrokeCap.butt;
     if (segments.isEmpty) {
       canvas.drawArc(rect, 0, math.pi * 2, false, base..color = track);
       return;
     }
     final n = segments.length;
-    final gap = n == 1 ? 0.0 : 0.16;
+    final gap = n == 1 ? 0.0 : 0.09;
     final sweep = (math.pi * 2 - gap * n) / n;
     var start = -math.pi / 2 + gap / 2;
     for (final s in segments) {

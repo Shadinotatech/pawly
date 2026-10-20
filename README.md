@@ -1,5 +1,7 @@
 # Pawly – Pet Care Tracker (Android app)
 
+Browser preview (sample data): https://shadinotatech.github.io/pawly/preview/
+
 Flutter-e banano offline pet care tracker: tika (vaccine), oshudh (medicine) reminder, repeat care (flea, deworming), ojon-er chart, vet visit note.
 Ei folder-e puro app-er code ache. App ta GitHub Actions (free) diye cloud-e build hoy, tai apnar computer-e kono programming tool install korte hobe na.
 
@@ -66,4 +68,5 @@ Signing key (`upload-keystore.jks`) ei zip-e **nei**; seta alada zip-e dewa hoye
 ## Jinish gulo jene rakhun
 - Signing key harale app update dewa kothin hoy. `pawly-signing.zip` Google Drive-e ar ekta USB-te rakhun.
 - Package ID: `com.pawlyapp.pawly` (Play Store-e ekbar dile ar bodlano jay na).
-- Version 1.0-e ad ba payment nei; review shohoje pass korbe. Pro subscription ar backup v1.1-e jog hobe.
+- Version 1.1-e Pawly Pro (Google Play Billing) ache. Play Console-e 3 ta product banate hobe, list ache `store/STORE-LISTING.md`-e.
+- Test APK-te Pro screen-e "Unlock Pro for testing" switch thake; Play Store-er AAB-te eta thake na.

@@ -21,7 +21,14 @@ KEY FEATURES
 • Multiple pets – add as many pets as you have, with photos
 • Works offline – no account, no login, no ads
 • Private – your data stays on your phone
-• Light and dark mode, kg or lb
+• Spending tracker – log food, vet, grooming and more; see the monthly total
+• Light and dark theme, kg or lb, your own currency
+
+PAWLY PRO (optional)
+• Unlimited pets (free plan: 3 pets)
+• Vet-ready PDF health report to share with your vet, sitter or boarding
+• Spending insights: 6-month chart and spending by category
+• Medicine dose history and on-time score
 
 WHY PAWLY
 Most pet apps need your vet to be on their system. Pawly works on its own: you stay in control of your pet's records, and reminders arrive even without internet.
@@ -41,8 +48,8 @@ Website: https://shadinotatech.github.io/pawly/
 ## Privacy policy URL
 https://shadinotatech.github.io/pawly/privacy-policy.html
 
-## Release notes (version 1.0.0)
-First release of Pawly: medicine, vaccine and care reminders, weight chart and vet notes for all your pets.
+## Release notes (version 1.1.0)
+New look with light and dark theme, a daily dashboard, spending tracker and Pawly Pro.
 
 ---
 
@@ -58,7 +65,7 @@ First release of Pawly: medicine, vaccine and care reminders, weight chart and v
 - Violence, sexual content, profanity, drugs, gambling: **No** to all.
 - Users can interact or share content with each other: **No**
 - Shares user location: **No**
-- Digital purchases: **No** (version 1.0)
+- Digital purchases: **Yes** (Pawly Pro via Google Play Billing)
 Expected rating: Everyone / PEGI 3.
 
 ### Target audience and content
@@ -88,3 +95,19 @@ Take 4–8 phone screenshots after installing the test APK (portrait, at least 1
 5. Weight chart
 6. Add menu
 Tip: add 2 pets with photos and some sample records first so the screens look full.
+
+
+---
+
+## Pawly Pro: products to create in Play Console (Monetize with Play)
+Create these with **exactly** these IDs, otherwise the app cannot find them.
+
+| Type | Product ID | Price (USD) | Note |
+| --- | --- | --- | --- |
+| Subscription | `pawly_pro_monthly` | 2.99 / month | Base plan: auto-renewing, monthly |
+| Subscription | `pawly_pro_yearly` | 14.99 / year | Base plan: auto-renewing, yearly. Add an offer: **7-day free trial** |
+| One-time product | `pawly_pro_lifetime` | 29.99 | Non-consumable |
+
+Name each one "Pawly Pro". Benefits text: Unlimited pets · PDF health report · Spending insights · Dose history.
+Products can only be created after an app bundle that uses billing has been uploaded (version 1.1.0 does).
+Bangladesh developers: set up a payments profile (Setup > Payments profile) before you can sell.
