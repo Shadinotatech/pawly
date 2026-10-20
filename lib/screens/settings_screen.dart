@@ -239,12 +239,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 store.changed();
               },
             ),
+            SwitchListTile(
+              secondary: const Icon(Icons.volume_up_outlined),
+              title: const Text('Ring loudly'),
+              subtitle: Text(s.loudReminders
+                  ? 'Plays a tone on alarm volume, even when the phone is on vibrate.'
+                  : 'Follows your phone\'s notification sound and silent mode.'),
+              value: s.loudReminders,
+              onChanged: (v) {
+                s.loudReminders = v;
+                store.changed();
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.notifications_outlined),
               title: const Text('Send a test notification'),
               onTap: () async {
+                final st = StoreScope.read(context);
                 await Reminders.instance.requestPermission();
-                await Reminders.instance.showTest();
+                await Reminders.instance.showTest(st);
               },
             ),
             const ListTile(
@@ -309,7 +322,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ListTile(
               leading: Icon(Icons.pets),
               title: Text('Pawly'),
-              subtitle: Text('Version 1.1.0'),
+              subtitle: Text('Version 1.1.1'),
             ),
           ]),
         ],

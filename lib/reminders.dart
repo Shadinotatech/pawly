@@ -25,14 +25,38 @@ class Reminders {
   static const _daysAhead = 21;
   static const _maxScheduled = 400; // Android allows ~500 alarms per app.
 
-  static const _channel = AndroidNotificationDetails(
-    'pawly_reminders',
+  /// Loud channel: plays the phone's notification tone on the ALARM volume,
+  /// so it rings even when the ringer is on vibrate. Channel settings are
+  /// fixed by Android once created, so new behaviour needs a new channel id.
+  static const _loud = AndroidNotificationDetails(
+    'pawly_reminders_loud',
+    'Pet care reminders (loud)',
+    channelDescription: 'Medicine, vaccine and care reminders that ring like an alarm',
+    importance: Importance.max,
+    priority: Priority.max,
+    playSound: true,
+    sound: UriAndroidNotificationSound('content://settings/system/notification_sound'),
+    audioAttributesUsage: AudioAttributesUsage.alarm,
+    enableVibration: true,
+    category: AndroidNotificationCategory.reminder,
+    icon: 'ic_stat_paw',
+  );
+
+  /// Normal channel: follows the phone's notification volume and silent mode.
+  static const _normal = AndroidNotificationDetails(
+    'pawly_reminders_normal',
     'Pet care reminders',
     channelDescription: 'Medicine, vaccine and care reminders for your pets',
     importance: Importance.high,
     priority: Priority.high,
+    playSound: true,
+    enableVibration: true,
+    category: AndroidNotificationCategory.reminder,
     icon: 'ic_stat_paw',
   );
+
+  static NotificationDetails detailsFor(AppStore store) =>
+      NotificationDetails(android: store.settings.loudReminders ? _loud : _normal);
 
   Future<void> init() async {
     if (_ready || kIsWeb) return;
@@ -77,14 +101,14 @@ class Reminders {
     }
   }
 
-  Future<void> showTest() async {
+  Future<void> showTest(AppStore store) async {
     await init();
     if (!_ready) return;
     await _plugin.show(
       id: 999999,
       title: 'Pawly reminders are working',
       body: 'You will get alerts like this for medicines and vaccines.',
-      notificationDetails: const NotificationDetails(android: _channel),
+      notificationDetails: detailsFor(store),
     );
   }
 
@@ -107,6 +131,7 @@ class Reminders {
       final mode = exact
           ? AndroidScheduleMode.exactAllowWhileIdle
           : AndroidScheduleMode.inexactAllowWhileIdle;
+      final details = detailsFor(store);
       var id = 1;
       for (final e in entries.take(_maxScheduled)) {
         await _plugin.zonedSchedule(
@@ -114,7 +139,7 @@ class Reminders {
           title: e.title,
           body: e.body,
           scheduledDate: tz.TZDateTime.from(e.at.toUtc(), tz.UTC),
-          notificationDetails: const NotificationDetails(android: _channel),
+          notificationDetails: details,
           androidScheduleMode: mode,
         );
       }

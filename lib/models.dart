@@ -390,6 +390,7 @@ class AppSettings {
   String currency;
   bool proOwned; // cached Play purchase state
   bool proTestUnlocked; // test builds only
+  bool loudReminders; // ring on alarm volume
 
   AppSettings({
     this.onboardingDone = false,
@@ -399,6 +400,7 @@ class AppSettings {
     this.currency = r'$',
     this.proOwned = false,
     this.proTestUnlocked = false,
+    this.loudReminders = true,
   });
 
   Map<String, dynamic> toJson() => {
@@ -409,6 +411,7 @@ class AppSettings {
         'currency': currency,
         'proOwned': proOwned,
         'proTestUnlocked': proTestUnlocked,
+        'loudReminders': loudReminders,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> j) => AppSettings(
@@ -422,5 +425,6 @@ class AppSettings {
         currency: (j['currency'] ?? r'$') as String,
         proOwned: (j['proOwned'] ?? false) as bool,
         proTestUnlocked: (j['proTestUnlocked'] ?? false) as bool,
+        loudReminders: (j['loudReminders'] ?? true) as bool,
       );
 }

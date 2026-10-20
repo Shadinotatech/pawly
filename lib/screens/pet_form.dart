@@ -78,9 +78,44 @@ class _PetFormScreenState extends State<PetFormScreen> {
   }
 
   Future<void> _pickPhoto() async {
+    final hasPhoto = _newPhotoTemp != null || _photoPath != null;
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.photo_camera_outlined),
+            title: const Text('Take a photo'),
+            onTap: () => Navigator.pop(c, 'camera'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Choose from gallery'),
+            onTap: () => Navigator.pop(c, 'gallery'),
+          ),
+          if (hasPhoto)
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: const Text('Remove photo'),
+              onTap: () => Navigator.pop(c, 'remove'),
+            ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );
+    if (choice == null || !mounted) return;
+    if (choice == 'remove') {
+      setState(() {
+        _newPhotoTemp = null;
+        _photoPath = null;
+      });
+      return;
+    }
     try {
       final file = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
+        source: choice == 'camera' ? ImageSource.camera : ImageSource.gallery,
+        preferredCameraDevice: CameraDevice.rear,
         maxWidth: 800,
         maxHeight: 800,
         imageQuality: 85,
@@ -88,7 +123,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
       if (file == null) return;
       setState(() => _newPhotoTemp = file.path);
     } catch (e) {
-      if (mounted) toast(context, 'Could not open photos.');
+      if (mounted) toast(context, choice == 'camera' ? 'Could not open the camera.' : 'Could not open photos.');
     }
   }
 
@@ -112,6 +147,12 @@ class _PetFormScreenState extends State<PetFormScreen> {
           } catch (_) {}
         }
         photo = dest;
+      } catch (_) {}
+    }
+    final oldPhoto = widget.pet?.photoPath;
+    if (oldPhoto != null && photo != oldPhoto) {
+      try {
+        await File(oldPhoto).delete();
       } catch (_) {}
     }
     final pet = Pet(

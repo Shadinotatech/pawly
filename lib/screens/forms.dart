@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../main.dart';
 import '../models.dart';
 import '../util.dart';
+import 'suggest_field.dart';
 import 'widgets.dart';
 
 Future<void> _open(BuildContext context, Widget page) =>
@@ -76,11 +77,8 @@ class _VaccineFormState extends State<VaccineForm> {
     super.dispose();
   }
 
-  List<String> get _suggestions => switch (widget.pet.species) {
-        Species.dog => const [
-            'Rabies', 'DHPP', 'Bordetella', 'Leptospirosis', 'Lyme',
-            'Canine influenza',
-          ],
+  List<String> get _quickPicks => switch (widget.pet.species) {
+        Species.dog => const ['Rabies', 'DHPP', 'Bordetella', 'Leptospirosis'],
         Species.cat => const ['Rabies', 'FVRCP', 'FeLV'],
         Species.other => const ['Rabies'],
       };
@@ -126,16 +124,18 @@ class _VaccineFormState extends State<VaccineForm> {
       onSave: _save,
       onDelete: widget.vaccine == null ? null : _delete,
       children: [
-        TextField(
+        SuggestField(
           controller: _name,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Vaccine name *'),
+          label: 'Vaccine name *',
+          hint: 'Start typing, e.g. Rabies',
+          icon: Icons.vaccines_outlined,
+          options: vaccineSuggestions(StoreScope.read(context), widget.pet.species),
         ),
         Wrap(
           spacing: 8,
           runSpacing: 4,
           children: [
-            for (final s in _suggestions)
+            for (final s in _quickPicks)
               ActionChip(
                 label: Text(s),
                 onPressed: () => setState(() => _name.text = s),
@@ -277,10 +277,12 @@ class _MedicationFormState extends State<MedicationForm> {
       onSave: _save,
       onDelete: widget.medication == null ? null : _delete,
       children: [
-        TextField(
+        SuggestField(
           controller: _name,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(labelText: 'Medicine name *'),
+          label: 'Medicine name *',
+          hint: 'Start typing, e.g. Apoquel',
+          icon: Icons.medication_outlined,
+          options: medicineSuggestions(StoreScope.read(context)),
         ),
         TextField(
           controller: _dose,
