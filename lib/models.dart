@@ -28,6 +28,8 @@ class Pet {
   String? photoPath;
   String microchip;
   String notes;
+  int colorIndex;
+  DateTime? adoptionDate;
 
   Pet({
     required this.id,
@@ -39,10 +41,14 @@ class Pet {
     this.photoPath,
     this.microchip = '',
     this.notes = '',
+    this.colorIndex = 0,
+    this.adoptionDate,
   });
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'colorIndex': colorIndex,
+        'adoptionDate': _iso(adoptionDate),
         'name': name,
         'species': species.name,
         'breed': breed,
@@ -63,6 +69,8 @@ class Pet {
         photoPath: j['photoPath'] as String?,
         microchip: (j['microchip'] ?? '') as String,
         notes: (j['notes'] ?? '') as String,
+        colorIndex: ((j['colorIndex'] ?? 0) as num).toInt(),
+        adoptionDate: _date(j['adoptionDate']),
       );
 }
 
@@ -319,21 +327,88 @@ class VetVisit {
       );
 }
 
+enum ExpenseCategory { food, vet, medicine, grooming, insurance, toys, supplies, other }
+
+extension ExpenseCategoryLabel on ExpenseCategory {
+  String get label => switch (this) {
+        ExpenseCategory.food => 'Food & treats',
+        ExpenseCategory.vet => 'Vet',
+        ExpenseCategory.medicine => 'Medicine',
+        ExpenseCategory.grooming => 'Grooming',
+        ExpenseCategory.insurance => 'Insurance',
+        ExpenseCategory.toys => 'Toys',
+        ExpenseCategory.supplies => 'Supplies',
+        ExpenseCategory.other => 'Other',
+      };
+}
+
+class Expense {
+  final String id;
+  final String petId;
+  DateTime date;
+  ExpenseCategory category;
+  double amount;
+  String note;
+
+  Expense({
+    required this.id,
+    required this.petId,
+    required this.date,
+    required this.category,
+    required this.amount,
+    this.note = '',
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'petId': petId,
+        'date': _iso(date),
+        'category': category.name,
+        'amount': amount,
+        'note': note,
+      };
+
+  factory Expense.fromJson(Map<String, dynamic> j) => Expense(
+        id: j['id'] as String,
+        petId: j['petId'] as String,
+        date: _date(j['date']) ?? DateTime.now(),
+        category: ExpenseCategory.values.firstWhere(
+            (e) => e.name == j['category'],
+            orElse: () => ExpenseCategory.other),
+        amount: ((j['amount'] ?? 0) as num).toDouble(),
+        note: (j['note'] ?? '') as String,
+      );
+}
+
+enum AppThemeMode { system, light, dark }
+
 class AppSettings {
   bool onboardingDone;
   bool useLb;
   int defaultReminderMinutes; // time for vaccine / care reminders
+  AppThemeMode themeMode;
+  String currency;
+  bool proOwned; // cached Play purchase state
+  bool proTestUnlocked; // test builds only
 
   AppSettings({
     this.onboardingDone = false,
     this.useLb = false,
     this.defaultReminderMinutes = 9 * 60,
+    this.themeMode = AppThemeMode.system,
+    this.currency = r'$',
+    this.proOwned = false,
+    this.proTestUnlocked = false,
   });
 
   Map<String, dynamic> toJson() => {
         'onboardingDone': onboardingDone,
         'useLb': useLb,
         'defaultReminderMinutes': defaultReminderMinutes,
+        'themeMode': themeMode.name,
+        'currency': currency,
+        'proOwned': proOwned,
+        'proTestUnlocked': proTestUnlocked,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> j) => AppSettings(
@@ -341,5 +416,11 @@ class AppSettings {
         useLb: (j['useLb'] ?? false) as bool,
         defaultReminderMinutes:
             ((j['defaultReminderMinutes'] ?? 540) as num).toInt(),
+        themeMode: AppThemeMode.values.firstWhere(
+            (e) => e.name == j['themeMode'],
+            orElse: () => AppThemeMode.system),
+        currency: (j['currency'] ?? r'$') as String,
+        proOwned: (j['proOwned'] ?? false) as bool,
+        proTestUnlocked: (j['proTestUnlocked'] ?? false) as bool,
       );
 }

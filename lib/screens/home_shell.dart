@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../reminders.dart';
 import 'add_sheet.dart';
+import 'expenses_screen.dart';
+import 'home_screen.dart';
 import 'pets_screen.dart';
 import 'settings_screen.dart';
-import 'today_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -21,12 +22,12 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
-    // When the app comes back to the foreground, refresh Today and reminders
-    // (the date may have changed while it was in the background).
+    // When the app comes back to the foreground, refresh Today, reminders and
+    // the Pro subscription state.
     _lifecycle = AppLifecycleListener(onResume: () {
       if (!mounted) return;
-      final store = StoreScope.read(context);
-      Reminders.instance.rescheduleAll(store);
+      Reminders.instance.rescheduleAll(StoreScope.read(context));
+      ProScope.read(context).refreshOwnership();
       setState(() {});
     });
   }
@@ -48,9 +49,10 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const TodayScreen(),
+      HomeScreen(onOpenPets: () => setState(() => _index = 1)),
       const PetsScreen(),
       const SizedBox.shrink(),
+      const ExpensesScreen(),
       const SettingsScreen(),
     ];
     return Scaffold(
@@ -58,23 +60,28 @@ class _HomeShellState extends State<HomeShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: _onTap,
-        destinations: const [
+        destinations: [
+          const NavigationDestination(
+              icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Home'),
+          const NavigationDestination(icon: Icon(Icons.pets), label: 'Pets'),
           NavigationDestination(
-              icon: Icon(Icons.today_outlined),
-              selectedIcon: Icon(Icons.today),
-              label: 'Today'),
-          NavigationDestination(
-              icon: Icon(Icons.pets),
-              selectedIcon: Icon(Icons.pets),
-              label: 'Pets'),
-          NavigationDestination(
-              icon: Icon(Icons.add_circle_outline),
-              selectedIcon: Icon(Icons.add_circle),
-              label: 'Add'),
-          NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
-              label: 'Settings'),
+            icon: Container(
+              width: 46,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+            ),
+            label: 'Add',
+          ),
+          const NavigationDestination(
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              selectedIcon: Icon(Icons.account_balance_wallet),
+              label: 'Spending'),
+          const NavigationDestination(
+              icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );

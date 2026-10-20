@@ -690,3 +690,124 @@ class _VisitFormState extends State<VisitForm> {
     );
   }
 }
+
+// ---------------------------------------------------------------- Expense
+
+Future<void> openExpenseForm(BuildContext context, Pet pet, {Expense? expense}) =>
+    _open(context, ExpenseForm(pet: pet, expense: expense));
+
+IconData expenseIcon(ExpenseCategory c) => switch (c) {
+      ExpenseCategory.food => Icons.restaurant_outlined,
+      ExpenseCategory.vet => Icons.local_hospital_outlined,
+      ExpenseCategory.medicine => Icons.medication_outlined,
+      ExpenseCategory.grooming => Icons.content_cut,
+      ExpenseCategory.insurance => Icons.shield_outlined,
+      ExpenseCategory.toys => Icons.sports_baseball_outlined,
+      ExpenseCategory.supplies => Icons.shopping_bag_outlined,
+      ExpenseCategory.other => Icons.receipt_outlined,
+    };
+
+class ExpenseForm extends StatefulWidget {
+  const ExpenseForm({super.key, required this.pet, this.expense});
+  final Pet pet;
+  final Expense? expense;
+
+  @override
+  State<ExpenseForm> createState() => _ExpenseFormState();
+}
+
+class _ExpenseFormState extends State<ExpenseForm> {
+  late final TextEditingController _amount;
+  late final TextEditingController _note;
+  late ExpenseCategory _cat;
+  late DateTime _date;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.expense;
+    _amount = TextEditingController(
+        text: e == null ? '' : e.amount.toStringAsFixed(e.amount % 1 == 0 ? 0 : 2));
+    _note = TextEditingController(text: e?.note ?? '');
+    _cat = e?.category ?? ExpenseCategory.food;
+    _date = e?.date ?? dateOnly(DateTime.now());
+  }
+
+  @override
+  void dispose() {
+    _amount.dispose();
+    _note.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final v = _parseNum(_amount.text);
+    if (v == null || v <= 0) {
+      toast(context, 'Enter the amount spent.');
+      return;
+    }
+    StoreScope.read(context).upsertExpense(Expense(
+      id: widget.expense?.id ?? newId(),
+      petId: widget.pet.id,
+      date: _date,
+      category: _cat,
+      amount: v,
+      note: _note.text.trim(),
+    ));
+    Navigator.of(context).pop();
+  }
+
+  Future<void> _delete() async {
+    if (!await confirm(context, 'Delete expense?', 'This expense will be removed.')) return;
+    if (!mounted) return;
+    StoreScope.read(context).deleteExpense(widget.expense!.id);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cur = StoreScope.read(context).settings.currency;
+    return FormPage(
+      title: widget.expense == null ? 'Expense for ${widget.pet.name}' : 'Edit expense',
+      onSave: _save,
+      onDelete: widget.expense == null ? null : _delete,
+      children: [
+        TextField(
+          controller: _amount,
+          autofocus: widget.expense == null,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [_decimal],
+          style: Theme.of(context).textTheme.headlineSmall,
+          decoration: InputDecoration(labelText: 'Amount *', prefixText: '$cur '),
+        ),
+        const FieldLabel('Category'),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final c in ExpenseCategory.values)
+              ChoiceChip(
+                avatar: Icon(expenseIcon(c), size: 18),
+                label: Text(c.label),
+                selected: _cat == c,
+                onSelected: (_) => setState(() => _cat = c),
+              ),
+          ],
+        ),
+        PickerField(
+          label: 'Date',
+          value: fmtDate(_date),
+          onTap: () async {
+            final d = await pickDate(context, _date, last: DateTime.now());
+            if (d != null) setState(() => _date = d);
+          },
+        ),
+        TextField(
+          controller: _note,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(labelText: 'Note', hintText: 'e.g. 5 kg dry food'),
+        ),
+      ],
+    );
+  }
+}

@@ -51,7 +51,23 @@ class AppStore extends ChangeNotifier {
   final List<CareTask> careTasks = [];
   final List<WeightEntry> weights = [];
   final List<VetVisit> visits = [];
+  final List<Expense> expenses = [];
   AppSettings settings = AppSettings();
+
+  /// Free plan limit.
+  static const freePetLimit = 3;
+
+  bool get isPro => settings.proOwned || settings.proTestUnlocked;
+  bool get canAddPet => isPro || pets.length < freePetLimit;
+
+  /// Picks a colour not yet used by another pet.
+  int nextColorIndex() {
+    final used = pets.map((p) => p.colorIndex).toSet();
+    for (var i = 0; i < 8; i++) {
+      if (!used.contains(i)) return i;
+    }
+    return pets.length % 8;
+  }
 
   late String photoDir;
   Future<void> _saving = Future.value();
@@ -89,6 +105,7 @@ class AppStore extends ChangeNotifier {
         'careTasks': careTasks.map((e) => e.toJson()).toList(),
         'weights': weights.map((e) => e.toJson()).toList(),
         'visits': visits.map((e) => e.toJson()).toList(),
+        'expenses': expenses.map((e) => e.toJson()).toList(),
       };
 
   void importJson(Map<String, dynamic> j, {bool notify = true}) {
@@ -117,6 +134,9 @@ class AppStore extends ChangeNotifier {
     visits
       ..clear()
       ..addAll(list('visits').map(VetVisit.fromJson));
+    expenses
+      ..clear()
+      ..addAll(list('expenses').map(Expense.fromJson));
     if (notify) changed();
   }
 
@@ -167,6 +187,39 @@ class AppStore extends ChangeNotifier {
   List<VetVisit> visitsFor(String petId) =>
       visits.where((v) => v.petId == petId).toList()
         ..sort((a, b) => b.date.compareTo(a.date));
+
+  List<Expense> expensesFor(String? petId) =>
+      expenses.where((e) => petId == null || e.petId == petId).toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+
+  double spentInMonth(DateTime month, {String? petId}) => expenses
+      .where((e) =>
+          (petId == null || e.petId == petId) &&
+          e.date.year == month.year &&
+          e.date.month == month.month)
+      .fold(0.0, (s, e) => s + e.amount);
+
+  /// Share of medicine doses marked given in the last [days] days (0..1),
+  /// or null when there were no doses.
+  double? adherence({String? petId, int days = 30}) {
+    final now = DateTime.now();
+    final today = dateOnly(now);
+    var due = 0, given = 0;
+    for (final m in medications) {
+      if (petId != null && m.petId != petId) continue;
+      for (var d = 0; d < days; d++) {
+        final day = today.subtract(Duration(days: d));
+        if (!m.isActiveOn(day)) continue;
+        for (final t in m.reminderMinutes) {
+          final at = day.add(Duration(minutes: t));
+          if (at.isAfter(now)) continue;
+          due++;
+          if (isDoseGiven(m.id, at)) given++;
+        }
+      }
+    }
+    return due == 0 ? null : given / due;
+  }
 
   /// The latest dose of each vaccine that has a next due date.
   List<Vaccine> dueVaccines({String? petId}) {
@@ -273,6 +326,7 @@ class AppStore extends ChangeNotifier {
     careTasks.removeWhere((e) => e.petId == petId);
     weights.removeWhere((e) => e.petId == petId);
     visits.removeWhere((e) => e.petId == petId);
+    expenses.removeWhere((e) => e.petId == petId);
     changed();
   }
 
@@ -334,6 +388,12 @@ class AppStore extends ChangeNotifier {
     changed();
   }
 
+  void upsertExpense(Expense e) => _upsert(expenses, e, (x) => x.id);
+  void deleteExpense(String id) {
+    expenses.removeWhere((e) => e.id == id);
+    changed();
+  }
+
   void upsertVisit(VetVisit v) => _upsert(visits, v, (e) => e.id);
   void deleteVisit(String id) {
     visits.removeWhere((e) => e.id == id);
@@ -348,9 +408,14 @@ class AppStore extends ChangeNotifier {
         } catch (_) {}
       }
     }
-    final keepOnboarding = settings.onboardingDone;
+    final old = settings;
     importJson(const {}, notify: false);
-    settings.onboardingDone = keepOnboarding;
+    settings
+      ..onboardingDone = old.onboardingDone
+      ..themeMode = old.themeMode
+      ..currency = old.currency
+      ..proOwned = old.proOwned
+      ..proTestUnlocked = old.proTestUnlocked;
     changed();
   }
 }

@@ -7,9 +7,10 @@ import '../util.dart';
 
 /// A small line chart of weight over time, drawn without extra packages.
 class WeightChart extends StatelessWidget {
-  const WeightChart({super.key, required this.entries, required this.useLb});
+  const WeightChart({super.key, required this.entries, required this.useLb, this.color});
   final List<WeightEntry> entries; // sorted oldest first
   final bool useLb;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +33,7 @@ class WeightChart extends StatelessWidget {
         painter: _WeightPainter(
           entries: entries,
           useLb: useLb,
-          line: theme.colorScheme.primary,
+          line: color ?? theme.colorScheme.primary,
           grid: theme.colorScheme.outlineVariant,
           text: theme.colorScheme.onSurfaceVariant,
         ),
@@ -120,11 +121,24 @@ class _WeightPainter extends CustomPainter {
         path.lineTo(p.dx, p.dy);
       }
     }
+    final fill = Path.from(path)
+      ..lineTo(pos(entries.last).dx, top + h)
+      ..lineTo(pos(entries.first).dx, top + h)
+      ..close();
+    canvas.drawPath(
+      fill,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [line.withValues(alpha: 0.28), line.withValues(alpha: 0.0)],
+        ).createShader(Rect.fromLTWH(left, top, w, h)),
+    );
     canvas.drawPath(
       path,
       Paint()
         ..color = line
-        ..strokeWidth = 2.5
+        ..strokeWidth = 3
         ..style = PaintingStyle.stroke
         ..strokeJoin = StrokeJoin.round,
     );

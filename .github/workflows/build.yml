@@ -36,7 +36,14 @@ jobs:
         run: flutter pub get
 
       - name: Check code
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.txt 2>&1
+          code=$?
+          cat analyze.txt
+          # Show problems as annotations so they are easy to read.
+          grep -E "^ *(error|warning) " analyze.txt | head -40 | while read -r line; do echo "::warning::$line"; done
+          exit $code
 
       - name: Run tests
         run: flutter test
@@ -57,7 +64,15 @@ jobs:
           echo "Signing key added."
 
       - name: Build APK (install on your phone to test)
-        run: flutter build apk --release
+        run: |
+          set +e
+          flutter build apk --release --dart-define=PAWLY_TEST_PRO=true > build.txt 2>&1
+          code=$?
+          cat build.txt
+          if [ $code -ne 0 ]; then
+            grep -iE "error|exception|failed" build.txt | head -30 | while read -r line; do echo "::error::$line"; done
+          fi
+          exit $code
 
       - name: Build App Bundle (upload this to Google Play)
         run: flutter build appbundle --release

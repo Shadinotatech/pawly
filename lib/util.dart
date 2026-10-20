@@ -104,3 +104,20 @@ void toast(BuildContext context, String message) {
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(message)));
 }
+
+String fmtMoney(double v, String currency) {
+  final whole = v == v.roundToDouble();
+  final n = whole ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+  // Add thousands separators.
+  final parts = n.split('.');
+  final buf = StringBuffer();
+  final s = parts[0];
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+    buf.write(s[i]);
+  }
+  final out = parts.length > 1 ? '$buf.${parts[1]}' : buf.toString();
+  return '$currency$out';
+}
+
+const currencies = [r'$', '€', '£', '৳', '₹', 'A\$', 'C\$', '¥', 'R\$', '₱'];

@@ -1,9 +1,9 @@
 name: pawly
-description: "Pawly - simple pet care tracker with vaccine, medicine and vet reminders."
+description: "Pawly - pet care tracker with vaccine, medicine and vet reminders."
 publish_to: 'none'
 
 # versionName+versionCode. Increase the number after + for every Play Store upload.
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.8.0
@@ -15,6 +15,10 @@ dependencies:
   timezone: ^0.11.0
   path_provider: ^2.1.5
   image_picker: ^1.2.0
+  in_app_purchase: ^3.3.1
+  in_app_purchase_android: ^0.5.3
+  pdf: ^3.13.1
+  printing: ^5.15.1
 
 dev_dependencies:
   flutter_test:
@@ -23,3 +27,26 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/Figtree-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Figtree-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Figtree-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Figtree-ExtraBold.ttf
+          weight: 800
+    - family: Fredoka
+      fonts:
+        - asset: assets/fonts/Fredoka-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Fredoka-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Fredoka-Bold.ttf
+          weight: 700
+  assets:
+    - assets/fonts/Figtree-Regular.ttf
+    - assets/fonts/Figtree-Bold.ttf
+    - assets/fonts/Fredoka-SemiBold.ttf

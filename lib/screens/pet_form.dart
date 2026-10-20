@@ -5,11 +5,20 @@ import 'package:image_picker/image_picker.dart';
 
 import '../main.dart';
 import '../models.dart';
+import '../store.dart';
+import '../theme.dart';
 import '../util.dart';
+import 'pro_screen.dart';
 import 'widgets.dart';
 
 /// Opens the add/edit pet screen. Returns the saved pet, or null.
-Future<Pet?> openPetForm(BuildContext context, {Pet? pet}) {
+Future<Pet?> openPetForm(BuildContext context, {Pet? pet}) async {
+  final store = StoreScope.read(context);
+  if (pet == null && !store.canAddPet) {
+    await openPro(context,
+        reason: 'The free plan includes up to ${AppStore.freePetLimit} pets. Go Pro for unlimited pets.');
+    if (!context.mounted || !store.canAddPet) return null;
+  }
   return Navigator.of(context).push<Pet>(
     MaterialPageRoute(builder: (_) => PetFormScreen(pet: pet)),
   );
@@ -31,6 +40,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
   late Species _species;
   late String _sex;
   DateTime? _birth;
+  DateTime? _adopted;
+  int _color = 0;
   String? _photoPath;
   String? _newPhotoTemp; // picked but not saved yet
 
@@ -47,7 +58,14 @@ class _PetFormScreenState extends State<PetFormScreen> {
     _species = p?.species ?? Species.dog;
     _sex = p?.sex ?? '';
     _birth = p?.birthDate;
+    _adopted = p?.adoptionDate;
     _photoPath = p?.photoPath;
+    _color = p?.colorIndex ?? 0;
+    if (p == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _color = StoreScope.read(context).nextColorIndex());
+      });
+    }
   }
 
   @override
@@ -106,6 +124,8 @@ class _PetFormScreenState extends State<PetFormScreen> {
       photoPath: photo,
       microchip: _chip.text.trim(),
       notes: _notes.text.trim(),
+      colorIndex: _color,
+      adoptionDate: _adopted,
     );
     store.upsertPet(pet);
     if (mounted) Navigator.of(context).pop(pet);
@@ -130,13 +150,17 @@ class _PetFormScreenState extends State<PetFormScreen> {
             onTap: _pickPhoto,
             child: Stack(
               children: [
-                CircleAvatar(
-                  radius: 52,
-                  backgroundColor: scheme.primaryContainer,
-                  backgroundImage: image,
-                  child: image == null
-                      ? Icon(Icons.pets, size: 44, color: scheme.primary)
-                      : null,
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: Brand.petColor(_color)),
+                  child: CircleAvatar(
+                    radius: 52,
+                    backgroundColor: Brand.petColor(_color).withValues(alpha: 0.25),
+                    backgroundImage: image,
+                    child: image == null
+                        ? Icon(Icons.add_a_photo_outlined, size: 36, color: scheme.onSurface)
+                        : null,
+                  ),
                 ),
                 Positioned(
                   right: 0,
@@ -157,6 +181,34 @@ class _PetFormScreenState extends State<PetFormScreen> {
           textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(labelText: 'Name *'),
         ),
+        const FieldLabel('Colour'),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (var i = 0; i < Brand.petColors.length; i++)
+              Semantics(
+                button: true,
+                selected: _color == i,
+                label: 'Colour ${i + 1}',
+                child: InkResponse(
+                  onTap: () => setState(() => _color = i),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Brand.petColors[i],
+                      border: Border.all(
+                          color: _color == i ? scheme.onSurface : Colors.transparent, width: 3),
+                    ),
+                    child: _color == i ? const Icon(Icons.check, color: Colors.white, size: 18) : null,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const FieldLabel('Type'),
         Wrap(
           spacing: 8,
           children: [
@@ -186,6 +238,17 @@ class _PetFormScreenState extends State<PetFormScreen> {
           },
           onClear: _birth == null ? null : () => setState(() => _birth = null),
         ),
+        PickerField(
+          label: 'Adoption day',
+          value: _adopted == null ? 'Not set' : fmtDate(_adopted!),
+          icon: Icons.favorite_border,
+          onTap: () async {
+            final d = await pickDate(context, _adopted ?? DateTime.now(), last: DateTime.now());
+            if (d != null) setState(() => _adopted = d);
+          },
+          onClear: _adopted == null ? null : () => setState(() => _adopted = null),
+        ),
+        const FieldLabel('Sex'),
         Wrap(
           spacing: 8,
           children: [
