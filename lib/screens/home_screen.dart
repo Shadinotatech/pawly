@@ -115,21 +115,23 @@ class _HomeScreenState extends State<HomeScreen> {
     final doneCount = todays.where((i) => i.done).length;
     final overdue = todays.where((i) => i.overdue).length;
 
-    // Next 30 days of vaccines and care, after today.
+    // Everything due after today: vaccines, repeat care and medicine courses
+    // that start later. Nearest first.
     final upcoming = <_Upcoming>[
       for (final v in store.dueVaccines())
-        if (store.petById(v.petId) != null &&
-            dateOnly(v.nextDueDate!).isAfter(today) &&
-            dateOnly(v.nextDueDate!).difference(today).inDays <= 30)
+        if (store.petById(v.petId) != null && dateOnly(v.nextDueDate!).isAfter(today))
           _Upcoming(store.petById(v.petId)!, '${v.name} vaccine',
               v.nextDueDate!, Icons.vaccines_outlined),
       for (final cTask in store.careTasks)
-        if (store.petById(cTask.petId) != null &&
-            dateOnly(cTask.nextDate).isAfter(today) &&
-            dateOnly(cTask.nextDate).difference(today).inDays <= 30)
+        if (store.petById(cTask.petId) != null && dateOnly(cTask.nextDate).isAfter(today))
           _Upcoming(store.petById(cTask.petId)!, cTask.displayName,
               cTask.nextDate, Icons.event_repeat),
+      for (final m in store.medications)
+        if (store.petById(m.petId) != null && dateOnly(m.startDate).isAfter(today))
+          _Upcoming(store.petById(m.petId)!, '${m.name} starts',
+              m.startDate, Icons.medication_outlined),
     ]..sort((a, b) => a.date.compareTo(b.date));
+    if (upcoming.length > 10) upcoming.removeRange(10, upcoming.length);
 
     final thisMonth = store.spentInMonth(now);
     final lastMonth = store.spentInMonth(DateTime(now.year, now.month - 1));
@@ -243,8 +245,45 @@ class _HomeScreenState extends State<HomeScreen> {
                   ]),
                 ),
               ),
-            if (upcoming.isNotEmpty) ...[
-              const SectionHeader('Coming up'),
+            const SectionHeader('Coming up'),
+            if (upcoming.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Panel(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [
+                      IconBubble(Icons.event_available_outlined, color: Brand.petColors[1]),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text('Nothing planned yet. Add a vaccine due date or a repeat task like flea treatment.',
+                            style: theme.textTheme.bodyMedium),
+                      ),
+                    ]),
+                    const SizedBox(height: 12),
+                    Row(children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _quick(1),
+                          icon: const Icon(Icons.vaccines_outlined, size: 18),
+                          label: const Text('Vaccine'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final pet = await _pickPet();
+                            if (pet != null && context.mounted) await openCareForm(context, pet);
+                          },
+                          icon: const Icon(Icons.event_repeat, size: 18),
+                          label: const Text('Repeat care'),
+                        ),
+                      ),
+                    ]),
+                  ]),
+                ),
+              )
+            else ...[
               SizedBox(
                 height: 132,
                 child: ListView.separated(
