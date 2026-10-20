@@ -72,7 +72,17 @@ class AppStore extends ChangeNotifier {
   late String photoDir;
   Future<void> _saving = Future.value();
 
+  bool _memoryOnly = false;
+
   static Future<AppStore> load() async {
+    if (kIsWeb) {
+      // Browser preview: keep everything in memory with sample data.
+      final store = AppStore._(File('preview.json'));
+      store._memoryOnly = true;
+      store.photoDir = '';
+      seedDemoData(store);
+      return store;
+    }
     final dir = await getApplicationDocumentsDirectory();
     final store = AppStore._(File('${dir.path}/pawly_data.json'));
     store.photoDir = '${dir.path}/photos';
@@ -143,6 +153,10 @@ class AppStore extends ChangeNotifier {
   /// Call after any change: saves to disk and refreshes the UI.
   void changed() {
     _pruneOldLogs();
+    if (_memoryOnly) {
+      notifyListeners();
+      return;
+    }
     final text = jsonEncode(toJson());
     _saving = _saving.then((_) async {
       final tmp = File('${_file.path}.tmp');
@@ -417,5 +431,51 @@ class AppStore extends ChangeNotifier {
       ..proOwned = old.proOwned
       ..proTestUnlocked = old.proTestUnlocked;
     changed();
+  }
+}
+
+/// Sample data for the browser preview and screenshots.
+void seedDemoData(AppStore s) {
+  final today = dateOnly(DateTime.now());
+  DateTime d(int days) => today.add(Duration(days: days));
+  s.settings.onboardingDone = true;
+  final milo = Pet(id: 'milo', name: 'Milo', species: Species.dog, breed: 'Beagle',
+      birthDate: DateTime(today.year - 3, 4, 12), sex: 'male', colorIndex: 0, microchip: '985141000123456');
+  final luna = Pet(id: 'luna', name: 'Luna', species: Species.cat, breed: 'British Shorthair',
+      birthDate: DateTime(today.year - 1, 2, 3), sex: 'female', colorIndex: 4);
+  final kiwi = Pet(id: 'kiwi', name: 'Kiwi', species: Species.other, breed: 'Budgie',
+      birthDate: DateTime(today.year - 2, 8, 20), colorIndex: 5);
+  s.pets.addAll([milo, luna, kiwi]);
+  final apo = Medication(id: 'm1', petId: 'milo', name: 'Apoquel', dose: '1 tablet',
+      startDate: d(-5), endDate: d(9), reminderMinutes: [8 * 60, 20 * 60]);
+  final drops = Medication(id: 'm2', petId: 'luna', name: 'Eye drops', dose: '2 drops',
+      startDate: d(-2), endDate: d(4), reminderMinutes: [9 * 60 + 30]);
+  s.medications.addAll([apo, drops]);
+  s.medLogs.add(MedLog(id: 'l1', medicationId: 'm1', scheduledAt: today.add(const Duration(hours: 8)), givenAt: today.add(const Duration(hours: 8, minutes: 5))));
+  for (var i = 1; i < 5; i++) {
+    s.medLogs.add(MedLog(id: 'la$i', medicationId: 'm1', scheduledAt: d(-i).add(const Duration(hours: 8)), givenAt: d(-i)));
+    s.medLogs.add(MedLog(id: 'lb$i', medicationId: 'm1', scheduledAt: d(-i).add(const Duration(hours: 20)), givenAt: d(-i)));
+  }
+  s.vaccines.addAll([
+    Vaccine(id: 'v1', petId: 'milo', name: 'Rabies', givenDate: d(-362), nextDueDate: d(3), vetName: 'Green Paws Clinic'),
+    Vaccine(id: 'v2', petId: 'milo', name: 'DHPP', givenDate: d(-200), nextDueDate: d(165)),
+    Vaccine(id: 'v3', petId: 'luna', name: 'FVRCP', givenDate: d(-340), nextDueDate: d(12)),
+  ]);
+  s.careTasks.addAll([
+    CareTask(id: 'c1', petId: 'milo', type: CareType.flea, repeatEveryDays: 30, nextDate: today),
+    CareTask(id: 'c2', petId: 'luna', type: CareType.deworm, repeatEveryDays: 90, nextDate: d(6)),
+    CareTask(id: 'c3', petId: 'kiwi', type: CareType.nails, repeatEveryDays: 45, nextDate: d(19)),
+  ]);
+  final w = [11.2, 11.6, 11.9, 12.1, 12.0, 12.4];
+  for (var i = 0; i < w.length; i++) {
+    s.weights.add(WeightEntry(id: 'w$i', petId: 'milo', date: d(-150 + i * 30), weightKg: w[i]));
+  }
+  s.visits.add(VetVisit(id: 'vv1', petId: 'milo', date: d(-20), reason: 'Itchy skin check-up', vetName: 'Dr. Rahman', cost: 65, note: 'Allergy. Apoquel for 2 weeks.'));
+  final cats = [ExpenseCategory.food, ExpenseCategory.vet, ExpenseCategory.toys, ExpenseCategory.grooming, ExpenseCategory.medicine];
+  final amounts = [42.0, 65.0, 18.0, 35.0, 28.0, 39.0, 22.0, 54.0, 31.0, 47.0, 26.0, 60.0];
+  for (var i = 0; i < amounts.length; i++) {
+    final month = DateTime(today.year, today.month - (i ~/ 2), 1 + (i * 3) % 25);
+    s.expenses.add(Expense(id: 'e$i', petId: i.isEven ? 'milo' : 'luna', date: month.isAfter(today) ? today : month,
+        category: cats[i % cats.length], amount: amounts[i]));
   }
 }

@@ -35,7 +35,7 @@ class Reminders {
   );
 
   Future<void> init() async {
-    if (_ready) return;
+    if (_ready || kIsWeb) return;
     try {
       await _plugin.initialize(
         settings: const InitializationSettings(
@@ -79,6 +79,7 @@ class Reminders {
 
   Future<void> showTest() async {
     await init();
+    if (!_ready) return;
     await _plugin.show(
       id: 999999,
       title: 'Pawly reminders are working',

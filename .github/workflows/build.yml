@@ -88,3 +88,36 @@ jobs:
         with:
           name: pawly-aab-for-play-store
           path: build/app/outputs/bundle/release/app-release.aab
+
+  # Browser preview of the app (sample data) + the privacy policy, published to
+  # https://shadinotatech.github.io/pawly/ from the gh-pages branch.
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+      - name: Build web preview
+        run: |
+          flutter create --platforms=web --org com.pawlyapp --project-name pawly .
+          flutter pub get
+          flutter build web --release --base-href /pawly/preview/ --dart-define=PAWLY_TEST_PRO=true
+      - name: Publish to gh-pages
+        run: |
+          rm -rf site && mkdir -p site/preview
+          cp -r docs/* site/
+          cp -r build/web/* site/preview/
+          touch site/.nojekyll
+          cd site
+          git init -q -b gh-pages
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Publish site and preview"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
